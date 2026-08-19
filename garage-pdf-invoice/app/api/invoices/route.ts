@@ -1,5 +1,6 @@
+import Mustache from 'mustache';
 import { chromium } from 'playwright';
-
+import fs from "fs"
 
 
 export async function POST(request: Request) {
@@ -27,29 +28,10 @@ export async function POST(request: Request) {
 
     const listing = await listingResponse.json();
 
-    // Generate invoice HTML
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 40px;
-            }
+    const template = fs.readFileSync(`${__dirname}/../lib/templates/invoice.html`,'utf-8')
 
-            h1 {
-              font-size: 24px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Invoice</h1>
-          <p>${listing.listingTitle}</p>
-        </body>
-      </html>
-    `;
+    // Generate invoice HTML
+    const html = Mustache.render(template,listing.listingTitle)
 
     // Generate PDF
     const browser = await chromium.launch();
@@ -64,7 +46,6 @@ export async function POST(request: Request) {
         printBackground: true,
       });
 
-      console.log("PDF: ", pdf)
 
       return new Response(new Uint8Array(pdf), {
         headers: {
