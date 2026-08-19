@@ -1,22 +1,25 @@
-import Mustache from 'mustache';
-import { chromium } from 'playwright';
-import fs from "fs"
+
 import axios from 'axios';
 import { generatePDF } from '@/app/lib/utils/generatePDF';
 
 
 export async function POST(request: Request) {
   try {
-    const { vehicleId } = await request.json();
+    const { listingLink } = await request.json();
 
-    if (!vehicleId) {
+    if (!listingLink) {
       return Response.json(
         { error: 'UUID is required' },
         { status: 400 }
       );
     }
 
+    // example listing link https://www.shopgarage.com/listing/2007-Pierce-Dash-Pumper-5d123316-f36a-4a67-83cb-26e341d3484e
+    const match = listingLink.match(
+      /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
+    );
 
+    const vehicleId = match?.[1];
 
     const listingResponse = await axios.get<Listing>(`https://api.shopgarage.com/listings/${vehicleId}`)
 

@@ -2,11 +2,13 @@
 
 'use client';
 
-import { Button, TextInput, Stack } from '@mantine/core';
+import { Button, TextInput, Stack, Radio } from '@mantine/core';
 import { useState } from 'react';
 
 export function InvoiceForm() {
-  const [vehicleId, setVehicleId] = useState('');
+  const [listingLink, setListingLink] = useState('');
+
+  const [action,setAction] = useState<"download"|"open">("open")
 
   async function createInvoice() {
     const response = await fetch('/api/invoices', {
@@ -15,7 +17,7 @@ export function InvoiceForm() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        vehicleId,
+        listingLink,
       }),
     });
 
@@ -27,16 +29,34 @@ export function InvoiceForm() {
 
   const url = URL.createObjectURL(pdf);
 
-  window.open(url, '_blank');
+   if (action === 'open') {
+      window.open(url, '_blank');
+    } else {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'invoice.pdf';
+      link.click();
+    }
   }
 
   return (
     <Stack>
       <TextInput
         label="VehicleId"
-        value={vehicleId}
-        onChange={(event) => setVehicleId(event.currentTarget.value)}
+        value={listingLink}
+        onChange={(event) => setListingLink(event.currentTarget.value)}
       />
+
+       <Radio.Group
+        label="After generating invoice"
+        value={action}
+        onChange={(value) => setAction(value as 'open' | 'download')}
+      >
+        <Stack mt="xs">
+          <Radio value="open" label="Open in new tab" />
+          <Radio value="download" label="Download PDF" />
+        </Stack>
+      </Radio.Group>
 
       <Button onClick={createInvoice}>
         Create Invoice
