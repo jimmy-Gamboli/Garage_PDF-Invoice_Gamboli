@@ -1,6 +1,7 @@
 import Mustache from 'mustache';
 import { chromium } from 'playwright';
 import fs from "fs"
+import axios from 'axios';
 
 
 export async function POST(request: Request) {
@@ -14,24 +15,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch listing
-    const listingResponse = await fetch(
-      `https://api.shopgarage.com/listings/${vehicleId}`
-    );
+   
 
-    if (!listingResponse.ok) {
+    const listingResponse = await axios.get<Listing>(`https://api.shopgarage.com/listings/${vehicleId}`)
+
+    console.log(listingResponse)
+
+    if (listingResponse.status!==200) {
       return Response.json(
         { error: 'Failed to fetch listing' },
         { status: listingResponse.status }
       );
     }
 
-    const listing = await listingResponse.json();
+    const listing = await listingResponse.data;
 
-    const template = fs.readFileSync(`${__dirname}/../lib/templates/invoice.html`,'utf-8')
+    console.log(listing.listingTitle)
+
+
+
+    const template = fs.readFileSync(`${process.cwd()}/app/lib/templates/invoice.html`,'utf-8')
 
     // Generate invoice HTML
-    const html = Mustache.render(template,listing.listingTitle)
+    const html = Mustache.render(template,listing)
+
+    
 
     // Generate PDF
     const browser = await chromium.launch();
