@@ -24,11 +24,9 @@ export async function POST(request: Request) {
 
     const listingResponse = await axios.get<Listing>(`https://api.shopgarage.com/listings/${vehicleId}`)
 
-    console.log(listingResponse)
-
     if (listingResponse.status !== 200) {
       return Response.json(
-        { error: 'Failed to fetch listing' },
+        { error: `Failed to fetch listing information for ID ${vehicleId}. Error: ${listingResponse.statusText}` },
         { status: listingResponse.status }
       );
     }
@@ -47,10 +45,9 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Invoice generation failed:', error);
 
     return Response.json(
-      { error: 'Failed to generate invoice' },
+      { error: `Failed to generate invoice. Error: ${error}` },
       { status: 500 }
     );
   }

@@ -9,7 +9,6 @@ interface GenerateInvoiceParams {
 export function useGenerateInvoice() {
   const query = useMutation({
     mutationFn: async ({ listingLink }: GenerateInvoiceParams) => {
-        console.log(listingLink)
       const response = await fetch('/api/invoices', {
         method: 'POST',
         headers: {

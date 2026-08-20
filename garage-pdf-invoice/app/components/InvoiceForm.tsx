@@ -2,44 +2,84 @@
 
 'use client';
 
-import { Button, TextInput, Stack, Radio, Paper, Title, ThemeIcon, Group, Divider, Text } from '@mantine/core';
-import { useState } from 'react';
+import {
+    Button,
+    TextInput,
+    Stack,
+    Radio,
+    Paper,
+    Title,
+    Text,
+    Group,
+    ThemeIcon,
+    Divider,
+    Alert,
+} from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { IconFileInvoice, IconLink, IconAlertCircle } from '@tabler/icons-react';
 import { useGenerateInvoice } from '../hooks/useGenerateInvoice';
-import { IconFileInvoice, IconLink } from '@tabler/icons-react';
+
+interface InvoiceFormValues {
+    listingLink: string;
+    action: 'open' | 'download';
+}
+
+function isValidUrl(value: string) {
+    try {
+        new URL(value);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 export function InvoiceForm() {
-    const [listingLink, setListingLink] = useState('');
+    const generateInvoice = useGenerateInvoice(); // hook for backend
 
-    const [action, setAction] = useState<"download" | "open">("open")
-
-    const generateInvoice = useGenerateInvoice();
-
-    async function handleGenerate() {
-       generateInvoice.mutate(
-        { listingLink },
-        {
-            onSuccess: (pdf) => {
-                const url = URL.createObjectURL(pdf);
-
-                if (action === 'open') {
-                    window.open(url, '_blank');
-                } else {
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'invoice.pdf';
-                    link.click();
-                }
+    // used mantine's forms for state
+    const form = useForm<InvoiceFormValues>({
+        initialValues: {
+            listingLink: '',
+            action: 'open',
+        },
+        validate: {
+            listingLink: (value) => {
+                if (!value.trim()) return 'Enter a listing URL';
+                if (!isValidUrl(value)) return 'Enter a valid URL, including https://';
+                return null;
             },
-        }
-    );
+        },
+    });
+
+    function handleSubmit(values: InvoiceFormValues) {
+        generateInvoice.mutate(
+            { listingLink: values.listingLink },
+            {
+                onSuccess: (pdf) => {
+                    const url = URL.createObjectURL(pdf);
+
+                    if (values.action === 'open') {
+                        window.open(url, '_blank');
+                    } else {
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'invoice.pdf';
+                        link.click();
+                    }
+                },
+            }
+        );
     }
 
-
+    function handleClear() {
+        form.reset();
+        generateInvoice.reset();
+    }
 
     return (
-        <Paper withBorder radius="lg" p="xl" maw={720} mx="auto">
+        <Paper withBorder radius="lg" p="xl" w="100%" maw={720} mx="auto">
             <Group mb="xs" gap="sm">
-                <ThemeIcon size={38} radius="md" variant="light" color="blue">
+                <ThemeIcon size={38} radius="md" variant="light" color="indigo">
                     <IconFileInvoice size={20} />
                 </ThemeIcon>
                 <div>
@@ -47,63 +87,73 @@ export function InvoiceForm() {
                         Generate invoice
                     </Title>
                     <Text size="sm" c="dimmed">
-                        Paste a Garage listing link to create a PDF invoice
+                        Paste a listing link to create a PDF invoice
                     </Text>
                 </div>
             </Group>
 
-
             <Divider my="md" />
 
-            <Stack gap="lg">
-                <TextInput
-                    label="Garage listing URL"
-                    placeholder="https://www.shopgarage.com/listing/title-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    leftSection={<IconLink size={16} />}
-                    value={listingLink}
-                    onChange={(event) => setListingLink(event.currentTarget.value)}
-                    size="md"
-                    radius="md"
-                />
+            <form onSubmit={form.onSubmit(handleSubmit)}>
+                <Stack gap="lg">
+                    <TextInput
+                        label="Garage listing URL"
+                        placeholder="https://garagesale.example/listing/123"
+                        description="We'll pull the item details straight from this page"
+                        leftSection={<IconLink size={16} />}
+                        size="md"
+                        radius="md"
+                        {...form.getInputProps('listingLink')}
+                    />
 
-                <Radio.Group
-                    label="When it's ready"
-                    value={action}
-                    onChange={(value) => setAction(value as 'open' | 'download')}
-                >
-                    <Stack mt="xs" gap="xs">
-                        <Radio value="open" label="Open in new tab" />
-                        <Radio value="download" label="Download PDF" />
-                    </Stack>
-                </Radio.Group>
+                    <Radio.Group
+                        label="When it's ready"
+                        {...form.getInputProps('action')}
+                    >
+                        <Stack mt="xs" gap="xs">
+                            <Radio value="open" label="Open in a new tab" />
+                            <Radio value="download" label="Download the PDF" />
+                        </Stack>
+                    </Radio.Group>
 
-                <div className="flex justify-center gap-3">
-                <Button
-                    onClick={() => handleGenerate()}
-                    radius="md"
-                    variant="filled"
-                    color="blue"
-                    size="md"
-                    
-                    loading={generateInvoice.isPending}
-                >
-                    Create invoice
-                </Button>
-                <Button
-                    onClick={() => setListingLink("")}
-                    radius="md"
-                    variant="filled"
-                    color="blue"
-                    size="md"
-                    
-                    loading={generateInvoice.isPending}
-                >
-                    Clear Input
-                </Button>
+                    {generateInvoice.isError && (
+                        <Alert
+                            variant="light"
+                            color="red"
+                            radius="md"
+                            icon={<IconAlertCircle size={16} />}
+                            title="Couldn't generate invoice"
+                        >
+                            {generateInvoice.error instanceof Error
+                                ? generateInvoice.error.message
+                                : 'Something went wrong. Check the link and try again.'}
+                        </Alert>
+                    )}
 
-                </div>
-            </Stack>
+                    <div className="flex justify-center gap-3">
+                        <Button
+                            type="submit"
+                            radius="md"
+                            variant="filled"
+                            color="indigo"
+                            size="md"
+                            loading={generateInvoice.isPending}
+                        >
+                            Create invoice
+                        </Button>
+                        <Button
+                            type="button"
+                            radius="md"
+                            variant="filled"
+                            color="indigo"
+                            size="md"
+                            onClick={handleClear}
+                        >
+                            Reset
+                        </Button>
+                    </div>
+                </Stack>
+            </form>
         </Paper>
     );
-
 }
