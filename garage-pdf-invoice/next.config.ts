@@ -2,13 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [
-    "playwright-core",
     "@sparticuz/chromium",
+    "playwright-core",
   ],
 
   outputFileTracingIncludes: {
-    "/api/invoices/**": [
-      "./node_modules/playwright-core/**",
+    "/api/invoices": [
+      "./node_modules/@sparticuz/chromium/bin/**/*",
     ],
   },
 };
