@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { generatePDF } from '@/app/lib/utils/generatePDF';
 
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
