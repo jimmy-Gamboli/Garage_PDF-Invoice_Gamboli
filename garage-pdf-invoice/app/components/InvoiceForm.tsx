@@ -46,6 +46,7 @@ export function InvoiceForm() {
             listingLink: (value) => {
                 if (!value.trim()) return 'Enter a listing URL';
                 if (!isValidUrl(value)) return 'Enter a valid URL, including https://';
+                if (!value.startsWith("https://www.shopgarage.com/listing")) return "Enter a garage URL in the form https://www.shopgarage.com/listing/{id}"
                 return null;
             },
         },
@@ -79,7 +80,7 @@ export function InvoiceForm() {
     return (
         <Paper withBorder radius="lg" p="xl" w="100%" maw={720} mx="auto">
             <Group mb="xs" gap="sm">
-                <ThemeIcon size={38} radius="md" variant="light" color="indigo">
+                <ThemeIcon size={38} radius="md" variant="light" color="orange">
                     <IconFileInvoice size={20} />
                 </ThemeIcon>
                 <div>
@@ -135,7 +136,7 @@ export function InvoiceForm() {
                             type="submit"
                             radius="md"
                             variant="filled"
-                            color="indigo"
+                            color="orange"
                             size="md"
                             loading={generateInvoice.isPending}
                         >
@@ -145,7 +146,7 @@ export function InvoiceForm() {
                             type="button"
                             radius="md"
                             variant="filled"
-                            color="indigo"
+                            color="orange"
                             size="md"
                             onClick={handleClear}
                         >
