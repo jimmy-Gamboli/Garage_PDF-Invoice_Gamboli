@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/invoices": [
       "./node_modules/@sparticuz/chromium/bin/**/*",
+      "./node_modules/playwright-core/**/*",
     ],
   },
 };
