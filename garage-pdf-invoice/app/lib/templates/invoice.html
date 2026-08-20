@@ -1,20 +1,443 @@
- <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 40px;
-            }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Transaction Record {{secondaryId}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F3ED;
+    --paper-inset: #EFECE3;
+    --ink: #1B2430;
+    --steel: #5B6472;
+    --steel-light: #A8B0BA;
+    --brick: #A13D2E;
+    --plate: #2B3542;
+    --plate-line: #8B96A3;
+    --hairline: #D9D4C7;
+    --rivet: #6B7480;
+  }
 
-            h1 {
-              font-size: 24px;
-            }
-          </style>
-        </head>
-        <body>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 16px;
+    background: #DCD8CC;
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sheet {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 12px 40px rgba(27,36,48,0.18);
+  }
+
+  .sheet-inner { padding: 56px 56px 44px; }
+
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 24px;
+    border-bottom: 3px solid var(--ink);
+  }
+
+  .invoice-tag .eyebrow {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brick);
+    margin: 0 0 4px;
+  }
+
+  .invoice-tag h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  .status-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--ink);
+    padding: 5px 10px;
+    border-radius: 2px;
+    align-self: flex-start;
+  }
+
+  .meta-block { text-align: right; }
+
+  .meta-row {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--steel);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 2px 0;
+  }
+
+  .meta-row span.label { color: var(--steel-light); }
+
+  .ref-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 32px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--steel);
+  }
+
+  .ref-strip .ref-item .k {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--steel-light);
+    margin-right: 6px;
+  }
+
+  .listing-summary {
+    display: flex;
+    gap: 24px;
+    padding: 30px 0 26px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .listing-copy h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+
+  .listing-copy .category-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--brick);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 10px;
+  }
+
+  .listing-copy p.desc {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--steel);
+    margin: 0;
+  }
+
+  .tag-row {
+    margin-top: 12px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brick);
+    border: 1px solid var(--brick);
+    border-radius: 2px;
+    padding: 2px 7px;
+  }
+
+  .data-plate {
+    position: relative;
+    margin: 30px 0;
+    background: var(--plate);
+    border-radius: 3px;
+    padding: 22px 28px;
+    box-shadow: inset 0 0 0 1px rgba(139,150,163,0.35),
+                inset 0 2px 4px rgba(0,0,0,0.4);
+  }
+
+  .data-plate::before,
+  .data-plate::after,
+  .data-plate .rivet-bl,
+  .data-plate .rivet-br {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, var(--steel-light), var(--rivet) 70%);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.5);
+  }
+  .data-plate::before { top: 10px; left: 10px; }
+  .data-plate::after { top: 10px; right: 10px; }
+  .data-plate .rivet-bl { bottom: 10px; left: 10px; }
+  .data-plate .rivet-br { bottom: 10px; right: 10px; }
+
+  .plate-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--plate-line);
+    margin: 0 0 14px;
+    text-align: center;
+    border-bottom: 1px solid rgba(139,150,163,0.35);
+    padding-bottom: 10px;
+  }
+
+  .plate-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px 24px;
+  }
+
+  .plate-field .k {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--plate-line);
+    margin: 0 0 3px;
+  }
+
+  .plate-field .v {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: #F0EEE7;
+    margin: 0;
+  }
+
+  table.pricing {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+  }
+
+  table.pricing thead th {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--steel);
+    text-align: left;
+    padding: 0 0 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  table.pricing thead th.num { text-align: right; }
+
+  table.pricing tbody td {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 13.5px;
+    vertical-align: top;
+  }
+
+  table.pricing tbody td.num {
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  table.pricing tbody .row-label { color: var(--steel); }
+
+  .totals-row.grand {
+    display: flex;
+    justify-content: space-between;
+    border-top: 2px solid var(--ink);
+    margin-top: 4px;
+    padding-top: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  .totals-row.grand .amt { color: var(--brick); }
+
+  .attr-block {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .attr-block h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin: 0 0 4px;
+  }
+
+  .attr-block .attr-note {
+    font-size: 11px;
+    color: var(--steel-light);
+    margin: 0 0 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .footer-refs {
+    margin-top: 36px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hairline);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--steel-light);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+  }
+
+  @media (max-width: 640px) {
+    .sheet-inner { padding: 32px 22px; }
+    .masthead, .listing-summary { flex-direction: column; gap: 16px; }
+    .meta-block { text-align: left; }
+    .meta-row { justify-content: flex-start; }
+    .plate-grid { grid-template-columns: repeat(2, 1fr); }
+    .attr-grid { grid-template-columns: 1fr; }
+    .listing-thumb { width: 100%; height: 180px; }
+  }
+
+  @media print {
+    body { background: var(--paper); padding: 0; }
+    .sheet { box-shadow: none; border: none; max-width: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="sheet-inner">
+
+      <div class="masthead">
+        <div class="invoice-tag">
+          <p class="eyebrow">Transaction Record</p>
           <h1>Invoice</h1>
-          <p>{{listingTitle}}</p>
-        </body>
-      </html>
+        </div>
+        <div class="meta-block">
+          <div class="status-chip">{{status}}</div>
+          <div class="meta-row" style="margin-top:10px;"><span class="label">Invoice No.</span><span>{{secondaryId}}</span></div>
+          <div class="meta-row"><span class="label">Issued</span><span>{{createdAt}}</span></div>
+          <div class="meta-row"><span class="label">Updated</span><span>{{updatedAt}}</span></div>
+          {{#startDate}}
+          <div class="meta-row"><span class="label">Starts</span><span>{{startDate}}</span></div>
+          {{/startDate}}
+          {{#expirationDate}}
+          <div class="meta-row"><span class="label">Expires</span><span>{{expirationDate}}</span></div>
+          {{/expirationDate}}
+        </div>
+      </div>
+
+      <div class="listing-summary">
+        <div class="listing-copy">
+          <h2>{{listingTitle}}</h2>
+          <p class="category-line">{{category.name}} &middot; {{category.industry}} &middot; {{address.state}}</p>
+          <p class="desc">{{listingDescription}}</p>
+          {{#tagsDisplay}}
+          <div class="tag-row">
+            <span class="tag">{{tagsDisplay}}</span>
+          </div>
+          {{/tagsDisplay}}
+        </div>
+      </div>
+
+      <div class="data-plate">
+        <div class="rivet-bl"></div>
+        <div class="rivet-br"></div>
+        <p class="plate-title">Apparatus Data Plate</p>
+        <div class="plate-grid">
+          <div class="plate-field">
+            <p class="k">Year</p>
+            <p class="v">{{itemAge}}</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Make</p>
+            <p class="v">{{itemBrand}}</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">GVWR</p>
+            <p class="v">{{itemWeight}} LB</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Length</p>
+            <p class="v">{{itemLength}}&Prime;</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Width</p>
+            <p class="v">{{itemWidth}}&Prime;</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Height</p>
+            <p class="v">{{itemHeight}}&Prime;</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Delivery</p>
+            <p class="v">{{deliveryMethod}}</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Pickup Available</p>
+            <p class="v">{{#isPickupAvailable}}Yes{{/isPickupAvailable}}{{^isPickupAvailable}}No{{/isPickupAvailable}}</p>
+          </div>
+          <div class="plate-field">
+            <p class="k">Sale Type</p>
+            <p class="v">{{#isAuction}}Auction{{/isAuction}}{{^isAuction}}Fixed Price{{/isAuction}}</p>
+          </div>
+        </div>
+      </div>
+
+      <table class="pricing">
+        <thead>
+          <tr>
+            <th>Price Reference</th>
+            <th class="num">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Selling Price</td>
+            <td class="num">{{sellingPrice}}</td>
+          </tr>
+          {{#appraisedPrice}}
+          <tr>
+            <td class="row-label">Appraised Price</td>
+            <td class="num">{{appraisedPrice}}</td>
+          </tr>
+          {{/appraisedPrice}}
+          {{#estimatedPriceMin}}
+          <tr>
+            <td class="row-label">Estimated Range</td>
+            <td class="num">{{estimatedPriceMin}} &ndash; {{estimatedPriceMax}}</td>
+          </tr>
+          {{/estimatedPriceMin}}
+        </tbody>
+      </table>
+
+      <div class="totals-row grand">
+        <span>Total Due</span>
+        <span class="amt">{{sellingPrice}}</span>
+      </div>
+
+      <div class="footer-refs">
+        <span>Record generated {{updatedAt}}</span>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

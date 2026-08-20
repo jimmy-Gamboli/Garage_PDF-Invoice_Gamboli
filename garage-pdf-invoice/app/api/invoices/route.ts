@@ -6,6 +6,7 @@ import { generatePDF } from '@/app/lib/utils/generatePDF';
 export async function POST(request: Request) {
   try {
     const { listingLink } = await request.json();
+    console.log("listing link",listingLink)
 
     if (!listingLink) {
       return Response.json(
